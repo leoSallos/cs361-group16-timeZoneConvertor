@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Time Zone Converter</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+        .container {
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f5f5f5;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .group {
+            margin-bottom: 20px;
+        }
+        .output-box {
+            margin-top: 20px; 
+            padding: 15px;
+            background: #fff;
+            border: 1px solid #ccc;
+            min-height: 40px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        label { display: block; margin: 3px 0; }
+        button {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: none;
+            background: #3498db;
+            color: white;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h2>Time Zone Converter</h2>
+
+    <!-- CITY CHECKBOX GROUP -->
+    <div class="group">
+        <h3>Select a City</h3>
+
+        <label><input type="checkbox" name="city" value="Tokyo"> Tokyo</label>
+        <label><input type="checkbox" name="city" value="New York"> New York</label>
+        <label><input type="checkbox" name="city" value="Portland"> Portland</label>
+        <label><input type="checkbox" name="city" value="London"> London</label>
+        <label><input type="checkbox" name="city" value="Sydney"> Sydney</label>
+    </div>
+
+    <!-- OFFSET CHECKBOX GROUP -->
+    <div class="group">
+        <h3>Select a UTC Offset</h3>
+
+        <label><input type="checkbox" name="offset" value="+0"> UTC +0 (GMT)</label>
+        <label><input type="checkbox" name="offset" value="+5:30"> UTC +5:30 (India)</label>
+        <label><input type="checkbox" name="offset" value="-5"> UTC -5 (EST)</label>
+        <label><input type="checkbox" name="offset" value="+9"> UTC +9 (Japan)</label>
+        <label><input type="checkbox" name="offset" value="+10"> UTC +10 (Australia East)</label>
+    </div>
+
+    <button onclick="lookupTime()">Get Current Time</button>
+
+    <div id="output" class="output-box"></div>
+</div>
+
+<script>
+    // ensures only one city or one offset can be selected
+    function enforceSingleSelection(name, clicked) {
+        const boxes = document.querySelectorAll(`input[name='${name}']`);
+        boxes.forEach(box => {
+            if (box !== clicked) box.checked = false;
+        });
+    }
+
+    // add event listeners to handle single-check behavior
+    document.querySelectorAll("input[name='city']").forEach(box => {
+        box.addEventListener("change", () => {
+            enforceSingleSelection("city", box);
+            // uncheck all offsets if a city is selected
+            if (box.checked) {
+                document.querySelectorAll("input[name='offset']").forEach(o => o.checked = false);
+            }
+        });
+    });
+
+    document.querySelectorAll("input[name='offset']").forEach(box => {
+        box.addEventListener("change", () => {
+            enforceSingleSelection("offset", box);
+            // uncheck all cities if an offset is selected
+            if (box.checked) {
+                document.querySelectorAll("input[name='city']").forEach(c => c.checked = false);
+            }
+        });
+    });
+
+    // Fetch from microservice (plain text)
+    async function lookupTime() {
+        const output = document.getElementById("output");
+        output.textContent = "Loading...";
+
+        const selectedCity = document.querySelector("input[name='city']:checked");
+        const selectedOffset = document.querySelector("input[name='offset']:checked");
+
+        let url = "http://localhost:8013/time?";
+
+        if (selectedCity) url += "city=" + encodeURIComponent(selectedCity.value);
+        else if (selectedOffset) url += "offset=" + encodeURIComponent(selectedOffset.value);
+        else {
+            output.textContent = "Please select a city OR a UTC offset.";
+            return;
+        }
+
+        try {
+            const res = await fetch(url);
+            const text = await res.text();
+            output.textContent = text;
+        } catch (err) {
+            output.textContent = "Error contacting microservice: " + err.message;
+        }
+    }
+</script>
+
+</body>
+</html>
