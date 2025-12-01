@@ -107,13 +107,19 @@ app.get("/offset", (req, res) => {
         return;
     }
 
+    const tz = timezoneData[city];
+
     if (!tz) {
         return res.status(404).send(`Unknown city: ${city}`);
     }
 
-    const tzDate = new Date(now.toLocaleString("en-US", { timeZone: tz }));
+    const minMSec = 1000 * 60;
+    const now = new Date();
+    const utcBase = new Date(now.getTime() + (now.getTimezoneOffset() * minMSec));
+    const selectTime = new Date(now.toLocaleString("en-US", { timeZone: tz }));
+    const offset = Math.round((selectTime.getTime() - utcBase.getTime()) / minMSec);
 
-    req.status(200).json({offset: tzDate.getTimezoneOffset()});
+    res.status(200).json({offset: offset});
 });
 
 // ------------------------------------------------------
