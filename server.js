@@ -103,7 +103,7 @@ app.get("/offset", (req, res) => {
     const city = req.query.city;
 
     if (!city){
-        res.status(404).send("No city query.");
+        res.status(400).send("No city query.");
         return;
     }
 
