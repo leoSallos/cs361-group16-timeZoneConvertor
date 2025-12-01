@@ -1,4 +1,4 @@
-// server.js — Time Zone Converter Microservice (Plain Text Output)
+// server.js — Time Zone Converter Microservice
 
 const fs = require("fs").promises;
 const express = require("express");
@@ -93,6 +93,27 @@ app.get("/time", (req, res) => {
             `Current time at UTC${offset}: ${localTime.toLocaleString()}`
         );
     }
+});
+
+// ------------------------------------------------------
+// SECONDARY ENDPOINT /offset
+// Returns JSON of the offset from UTC in minutes.
+// ------------------------------------------------------
+app.get("/offset", (req, res) => {
+    const city = req.query.city;
+
+    if (!city){
+        res.status(404).send("No city query.");
+        return;
+    }
+
+    if (!tz) {
+        return res.status(404).send(`Unknown city: ${city}`);
+    }
+
+    const tzDate = new Date(now.toLocaleString("en-US", { timeZone: tz }));
+
+    req.status(200).json({offset: tzDate.getTimezoneOffset()});
 });
 
 // ------------------------------------------------------
