@@ -103,13 +103,17 @@ app.get("/offset", (req, res) => {
     const city = req.query.city;
 
     if (!city){
+        console.log("New offset request with no city given.\n");
         res.status(400).send("No city query.");
         return;
     }
 
+    console.log("New offset request with city: " + city);
+
     const tz = timezoneData[city];
 
     if (!tz) {
+        console.log("Unknown city name.\n");
         return res.status(404).send(`Unknown city: ${city}`);
     }
 
@@ -119,6 +123,7 @@ app.get("/offset", (req, res) => {
     const selectTime = new Date(now.toLocaleString("en-US", { timeZone: tz }));
     const offset = Math.round((selectTime.getTime() - utcBase.getTime()) / minMSec);
 
+    console.log("Success, sending response.\n");
     res.status(200).json({offset: offset});
 });
 
